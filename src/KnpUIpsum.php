@@ -13,21 +13,23 @@ class KnpUIpsum
 
     private $minSunshine;
     /**
-     * @var KnpUWordProvider
+     * @var WordProviderInterface[]
      */
-    private $wordProvider;
+    private $wordProviders;
+
+    private $wordList;
 
     /**
      * KnpUIpsum constructor.
-     * @param WordProviderInterface $wordProvider
+     * @param array $wordProviders
      * @param bool $unicornsAreReal
      * @param int $minSunshine
      */
-    public function __construct(WordProviderInterface $wordProvider, bool $unicornsAreReal = true, $minSunshine = 3)
+    public function __construct(array $wordProviders, bool $unicornsAreReal = true, $minSunshine = 3)
     {
         $this->unicornsAreReal = $unicornsAreReal;
         $this->minSunshine = $minSunshine;
-        $this->wordProvider = $wordProvider;
+        $this->wordProviders = $wordProviders;
     }
 
     /**
@@ -54,7 +56,7 @@ class KnpUIpsum
         for ($i = 0; $i < $count; $i++) {
             $wordCount = $this->gauss(16, 5.08);
             // avoid very short sentences
-            $wordCount  = $wordCount < 4 ? 4 : $wordCount;
+            $wordCount = $wordCount < 4 ? 4 : $wordCount;
             $sentences[] = $this->getWords($wordCount, true);
         }
 
@@ -69,8 +71,8 @@ class KnpUIpsum
      * Generates words of lorem ipsum.
      *
      * @access public
-     * @param  integer $count how many words to generate
-     * @param  boolean $asArray whether an array or a string should be returned
+     * @param integer $count how many words to generate
+     * @param boolean $asArray whether an array or a string should be returned
      * @return mixed   string or array of generated lorem ipsum words
      */
     public function getWords(int $count = 1, bool $asArray = false)
@@ -116,8 +118,8 @@ class KnpUIpsum
      * number of words in a sentence, the number of sentences in a paragraph
      * and the distribution of commas in a sentence.
      *
-     * @param  float $mean average value
-     * @param  float $std_dev standard deviation
+     * @param float $mean average value
+     * @param float $std_dev standard deviation
      * @return float  calculated distribution
      */
     private function gauss(float $mean, float $std_dev): float
@@ -213,6 +215,18 @@ class KnpUIpsum
 
     private function getWordList(): array
     {
-        return $this->wordProvider->getWordList();
+        if (null === $this->wordList) {
+            $words = [];
+            foreach ($this->wordProviders as $wordProvider) {
+                $words = array_merge($words, $wordProvider->getWordList());
+            }
+
+            if (count($words) <= 1) {
+                throw new \Exception('Word list must contain at least 2 words!');
+            }
+            $this->wordList = $words;
+        }
+
+        return $this->wordList;
     }
 }
