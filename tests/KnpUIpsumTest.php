@@ -14,7 +14,7 @@ class KnpUIpsumTest extends TestCase
         $ipsum = new KnpUIpsum(new KnpUWordProvider());
 
         $words = $ipsum->getWords(1);
-        $this->assertInternalType('string', $words);
+        $this->assertIsString( $words);
         $this->assertCount(1, explode(' ', $words));
 
         $words = $ipsum->getWords(10);
